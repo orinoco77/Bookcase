@@ -78,6 +78,6 @@ public class ScanService extends IntentService {
         } catch (IOException e) {
             e.printStackTrace();
         }
-
+        //do sqlite stuff
     }
 }
