@@ -72,7 +72,7 @@ public class MainActivity extends AppCompatActivity {
 
     private OnClickListener scanListener = new OnClickListener() {
         public void onClick(View v) {
-
+            ScanService.startActionScanEbooks(MainActivity.this);
         }
     };
 
