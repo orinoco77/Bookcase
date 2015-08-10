@@ -57,15 +57,17 @@ public class ScanService extends IntentService {
      * parameters.
      */
     private void handleActionScanEbooks() {
+        String responseString = "";
         String url = "https://www.googleapis.com/books/v1/volumes?q=The+Colour+of+Magic+-+Terry+Pratchett.epub&key=AIzaSyDNxF8IsW8_TzLK8Jt_98qgOiQW2KFQ6Hc";
         try {
+            //it's deprecated, but it works, which is more than can be said for the alternatives.
             HttpClient httpclient = new DefaultHttpClient();
             HttpResponse response = httpclient.execute(new HttpGet(url));
             StatusLine statusLine = response.getStatusLine();
             if (statusLine.getStatusCode() == HttpStatus.SC_OK) {
                 ByteArrayOutputStream out = new ByteArrayOutputStream();
                 response.getEntity().writeTo(out);
-                String responseString = out.toString();
+                responseString = out.toString();
                 out.close();
                 //..more logic
             } else {
@@ -76,5 +78,6 @@ public class ScanService extends IntentService {
         } catch (IOException e) {
             e.printStackTrace();
         }
+
     }
 }
