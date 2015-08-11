@@ -10,22 +10,26 @@ import android.view.View.OnClickListener;
 import android.widget.Button;
 import android.widget.Toast;
 
+import java.io.File;
 import java.io.IOException;
 
 
 public class MainActivity extends AppCompatActivity {
 
-
+    static MainActivity ma;
     private Button startButton;
     private Button configureButton;
     private Button scanButton;
     private boolean started = false;
     private static String mLog;
     private ServerHandler handler;
+    private String path;
+    private String port;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
+        ma = this;
         setContentView(R.layout.activity_main);
 
         startButton = (Button) findViewById(R.id.buttonStart);
@@ -36,8 +40,8 @@ public class MainActivity extends AppCompatActivity {
         scanButton.setOnClickListener(scanListener);
 
         SharedPreferences sharedPref = PreferenceManager.getDefaultSharedPreferences(this);
-        String port = sharedPref.getString("port", "");
-        String path = sharedPref.getString("path", "");
+        port = sharedPref.getString("port", "");
+        path = sharedPref.getString("path", "");
         handler = new ServerHandler(Integer.parseInt(port));
         handler.Path = path;
     }
@@ -72,7 +76,14 @@ public class MainActivity extends AppCompatActivity {
 
     private OnClickListener scanListener = new OnClickListener() {
         public void onClick(View v) {
-            ScanService.startActionScanEbooks(MainActivity.this);
+            File f = new File(path);
+            File file[] = f.listFiles();
+
+            for (int i = 0; i < file.length; i++) {
+                if (file[i].getName().endsWith(".epub")) {
+                    ScanService.startActionScanEbooks(MainActivity.this, file[i].getName());
+                }
+            }
         }
     };
 
