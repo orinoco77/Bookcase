@@ -2,12 +2,15 @@ package uk.co.sequoiasolutions.bookcase;
 
 import android.content.Intent;
 import android.content.SharedPreferences;
+import android.database.Cursor;
 import android.os.Bundle;
 import android.preference.PreferenceManager;
 import android.support.v7.app.AppCompatActivity;
 import android.view.View;
 import android.view.View.OnClickListener;
 import android.widget.Button;
+import android.widget.ListView;
+import android.widget.SimpleCursorAdapter;
 import android.widget.Toast;
 
 import java.io.File;
@@ -20,6 +23,7 @@ public class MainActivity extends AppCompatActivity {
     private Button startButton;
     private Button configureButton;
     private Button scanButton;
+    private ListView listViewEbooks;
     private boolean started = false;
     private static String mLog;
     private ServerHandler handler;
@@ -38,6 +42,16 @@ public class MainActivity extends AppCompatActivity {
         configureButton.setOnClickListener(configureListener);
         scanButton = (Button) findViewById(R.id.buttonScan);
         scanButton.setOnClickListener(scanListener);
+        listViewEbooks = (ListView) findViewById(R.id.listViewEbooks);
+        EbookDataSource dataSource = new EbookDataSource(MainActivity.this); //ugly but possibly unavoidable
+        dataSource.open();
+
+        String[] columns = new String[]{MySQLiteHelper.COLUMN_TITLE, MySQLiteHelper.COLUMN_AUTHOR, MySQLiteHelper.COLUMN_IMAGEURL};
+        int[] viewIDs = new int[]{R.id.title, R.id.description, R.id.imageView};
+        Cursor cursor = dataSource.getEbookCursor();
+        SimpleCursorAdapter adapter;
+        adapter = new SimpleCursorAdapter(MainActivity.this, R.layout.listviewlayout, cursor, columns, viewIDs, 0);
+        listViewEbooks.setAdapter(adapter);
 
         SharedPreferences sharedPref = PreferenceManager.getDefaultSharedPreferences(this);
         port = sharedPref.getString("port", "");

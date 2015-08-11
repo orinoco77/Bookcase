@@ -89,6 +89,12 @@ public class EbookDataSource {
         return result;
     }
 
+    public Cursor getEbookCursor() {
+        Cursor cursor = database.query(MySQLiteHelper.TABLE_EBOOKS, new String[]{MySQLiteHelper.COLUMN_ID, MySQLiteHelper.COLUMN_TITLE, MySQLiteHelper.COLUMN_AUTHOR, MySQLiteHelper.COLUMN_IMAGEURL}, null, null, null, null, null);
+
+        return cursor;
+    }
+
     private Ebook cursorToEbook(Cursor cursor) {
         Ebook ebook = new Ebook();
         ebook.setId(cursor.getLong(0));

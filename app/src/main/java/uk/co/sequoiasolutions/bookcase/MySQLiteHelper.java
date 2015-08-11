@@ -8,12 +8,12 @@ import android.util.Log;
 public class MySQLiteHelper extends SQLiteOpenHelper {
 
     public static final String TABLE_EBOOKS = "ebooks";
-    public static final String COLUMN_ID = "Id";
-    public static final String COLUMN_TITLE = "Title";
-    public static final String COLUMN_AUTHOR = "Author";
-    public static final String COLUMN_DESCRIPTION = "Description";
-    public static final String COLUMN_IMAGEURL = "ImageURL";
-    public static final String COLUMN_EBOOKURL = "EbookURL";
+    public static final String COLUMN_ID = "_id";
+    public static final String COLUMN_TITLE = "_title";
+    public static final String COLUMN_AUTHOR = "_author";
+    public static final String COLUMN_DESCRIPTION = "_description";
+    public static final String COLUMN_IMAGEURL = "_imageURL";
+    public static final String COLUMN_EBOOKURL = "_ebookURL";
 
     private static final String DATABASE_NAME = "ebooks.db";
     private static final int DATABASE_VERSION = 1;

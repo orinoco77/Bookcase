@@ -31,4 +31,12 @@
         android:id="@+id/buttonScan"
         android:layout_below="@+id/buttonStart"
         android:layout_centerHorizontal="true" />
+
+    <ListView
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:id="@+id/listViewEbooks"
+        android:layout_below="@+id/buttonConfigure"
+        android:layout_centerHorizontal="true"
+        tools:listitem="@layout/listviewlayout" />
 </RelativeLayout>

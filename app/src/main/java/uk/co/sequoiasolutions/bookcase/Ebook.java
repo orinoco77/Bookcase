@@ -4,59 +4,59 @@ package uk.co.sequoiasolutions.bookcase;
  * Created by ajs on 10/08/2015.
  */
 public class Ebook {
-    private long id;
-    private String title;
-    private String author;
-    private String description;
-    private String imageUrl;
-    private String ebookUrl;
+    private long _id;
+    private String _title;
+    private String _author;
+    private String _description;
+    private String _imageUrl;
+    private String _ebookUrl;
 
     public String getTitle() {
-        return title;
+        return _title;
     }
 
     public void setTitle(String value) {
-        title = value;
+        _title = value;
     }
 
     public String getAuthor() {
-        return author;
+        return _author;
     }
 
     public void setAuthor(String author) {
-        this.author = author;
+        this._author = author;
     }
 
     public String getDescription() {
-        return description;
+        return _description;
     }
 
     public void setDescription(String description) {
-        this.description = description;
+        this._description = description;
     }
 
     public String getImageUrl() {
-        return imageUrl;
+        return _imageUrl;
     }
 
     public void setImageUrl(String imageUrl) {
-        this.imageUrl = imageUrl;
+        this._imageUrl = imageUrl;
     }
 
     public String getEbookUrl() {
-        return ebookUrl;
+        return _ebookUrl;
     }
 
     public void setEbookUrl(String ebookUrl) {
-        this.ebookUrl = ebookUrl;
+        this._ebookUrl = ebookUrl;
     }
 
     public long getId() {
-        return id;
+        return _id;
     }
 
     public void setId(long id) {
-        this.id = id;
+        this._id = id;
     }
 
     public Ebook() {
