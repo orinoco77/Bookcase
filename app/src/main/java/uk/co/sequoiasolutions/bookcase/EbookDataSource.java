@@ -82,7 +82,7 @@ public class EbookDataSource {
     }
 
     public boolean ebookExists(String ebookUrl) {
-        Cursor cursor = database.query(MySQLiteHelper.TABLE_EBOOKS, new String[]{MySQLiteHelper.COLUMN_EBOOKURL}, MySQLiteHelper.COLUMN_EBOOKURL + "='" + ebookUrl + "'", null, null, null, null);
+        Cursor cursor = database.query(MySQLiteHelper.TABLE_EBOOKS, new String[]{MySQLiteHelper.COLUMN_EBOOKURL}, MySQLiteHelper.COLUMN_EBOOKURL + "= ?", new String[]{ebookUrl}, null, null, null);
         cursor.moveToFirst();
         boolean result = !cursor.isAfterLast();
         cursor.close();
