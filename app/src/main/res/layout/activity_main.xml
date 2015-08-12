@@ -36,7 +36,16 @@
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
         android:id="@+id/listViewEbooks"
+        tools:listitem="@layout/listviewlayout"
         android:layout_below="@+id/buttonConfigure"
-        android:layout_centerHorizontal="true"
-        tools:listitem="@layout/listviewlayout" />
+        android:layout_alignParentLeft="true"
+        android:layout_alignParentStart="true"
+        android:layout_marginTop="72dp" />
+
+    <ProgressBar
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:id="@+id/progressBar"
+        android:layout_below="@+id/buttonConfigure"
+        android:layout_centerHorizontal="true" />
 </RelativeLayout>

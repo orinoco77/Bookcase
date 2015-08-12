@@ -10,6 +10,10 @@ import org.json.JSONObject;
 import java.io.File;
 import java.io.FileInputStream;
 import java.io.FileNotFoundException;
+import java.net.InetAddress;
+import java.net.NetworkInterface;
+import java.net.SocketException;
+import java.util.Enumeration;
 import java.util.List;
 
 import fi.iki.elonen.NanoHTTPD;
@@ -21,9 +25,10 @@ public class ServerHandler extends NanoHTTPD {
     public int Port;
     public String Path;
 
-    public ServerHandler(int port) {
+    public ServerHandler(int port, String path) {
         super(port);
         Port = port;
+        Path = path;
     }
 
     public void run() {
@@ -32,6 +37,19 @@ public class ServerHandler extends NanoHTTPD {
 
     @Override
     public Response serve(IHTTPSession session) {
+        String ipAddress = null;
+        try {
+            for (Enumeration<NetworkInterface> en = NetworkInterface.getNetworkInterfaces(); en.hasMoreElements(); ) {
+                NetworkInterface intf = en.nextElement();
+                for (Enumeration<InetAddress> enumIpAddr = intf.getInetAddresses(); enumIpAddr.hasMoreElements(); ) {
+                    InetAddress inetAddress = enumIpAddr.nextElement();
+                    if (!inetAddress.isLoopbackAddress()) {
+                        ipAddress = inetAddress.getHostAddress().toString();
+                    }
+                }
+            }
+        } catch (SocketException ex) {
+        }
         String querystring = session.getQueryParameterString();
         String answer = "";
         String filepath = Path
@@ -63,13 +81,18 @@ public class ServerHandler extends NanoHTTPD {
                         json = new JSONObject().put("count", ebooks.size());
                         json.put("ebook", null);
                         for (Ebook book : ebooks) {
-                            json.accumulate("ebook", new JSONObject().put("title", book.getTitle()).put("author", book.getAuthor()));
+                            json.accumulate("ebook", new JSONObject()
+                                    .put("title", book.getTitle())
+                                    .put("author", book.getAuthor())
+                                    .put("description", book.getDescription())
+                                    .put("imageUrl", book.getImageUrl())
+                                    .put("ebookUrl", "http://" + ipAddress + ":" + Port + "/" + book.getEbookUrl()));
                         }
                     } catch (JSONException e) {
                         e.printStackTrace();
                     }
                     try {
-                        answer = json.toString(1);
+                        answer = json.toString(1).replace("\\", "");
                     } catch (JSONException e) {
                         answer = json.toString();
                     }

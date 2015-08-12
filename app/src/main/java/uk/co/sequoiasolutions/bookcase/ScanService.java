@@ -3,6 +3,10 @@ package uk.co.sequoiasolutions.bookcase;
 import android.app.IntentService;
 import android.content.Context;
 import android.content.Intent;
+import android.content.SharedPreferences;
+import android.os.Bundle;
+import android.os.ResultReceiver;
+import android.preference.PreferenceManager;
 
 import org.apache.http.HttpResponse;
 import org.apache.http.HttpStatus;
@@ -15,6 +19,7 @@ import org.json.JSONException;
 import org.json.JSONObject;
 
 import java.io.ByteArrayOutputStream;
+import java.io.File;
 import java.io.IOException;
 
 /**
@@ -28,16 +33,19 @@ public class ScanService extends IntentService {
 
     private static final String ACTION_SCAN_EBOOKS = "uk.co.sequoiasolutions.bookcase.action.ScanEbooks";
     private static final String PATH = "uk.co.sequoiasolutions.bookcase.extra.Path";
+    private ResultReceiver rec;
+    private SharedPreferences sharedPref;
     /**
      * Starts this service to perform action ScanEbooks with the given parameters. If
      * the service is already performing a task this action will be queued.
      *
      * @see IntentService
      */
-    public static void startActionScanEbooks(Context context, String path) {
+    public static void startActionScanEbooks(Context context, String path, ScanResultReceiver mReceiver) {
         Intent intent = new Intent(context, ScanService.class);
         intent.setAction(ACTION_SCAN_EBOOKS);
         intent.putExtra(PATH, path);
+        intent.putExtra("receiverTag", mReceiver);
 
         context.startService(intent);
     }
@@ -49,10 +57,13 @@ public class ScanService extends IntentService {
     @Override
     protected void onHandleIntent(Intent intent) {
         if (intent != null) {
+            rec = intent.getParcelableExtra("receiverTag");
             final String action = intent.getAction();
             if (ACTION_SCAN_EBOOKS.equals(action)) {
                 final String path = intent.getStringExtra(PATH);
                 handleActionScanEbooks(path);
+                Bundle b = new Bundle();
+                rec.send(0, b);
             }
         }
     }
@@ -62,6 +73,32 @@ public class ScanService extends IntentService {
      * parameters.
      */
     private void handleActionScanEbooks(String path) {
+        sharedPref = PreferenceManager.getDefaultSharedPreferences(this);
+        path = sharedPref.getString("path", "");
+        if (path.equals(""))
+            path = "/sdcard/";
+        getBooksFromPath(path);
+    }
+
+    private void getBooksFromPath(String path) {
+        File f = new File(path);
+        File file[] = f.listFiles();
+        if (file != null) {
+            for (int i = 0; i < file.length; i++) {
+                if (file[i].isDirectory())
+                    getBooksFromPath(file[i].getAbsolutePath());
+                if (file[i].getName().endsWith(".epub"))
+                    scanEbook(file[i].getName());
+            }
+        } else {
+            Bundle b = new Bundle();
+            b.putString("errorMessage", "Failed to find the path specified.");
+            rec.send(1, b);
+        }
+    }
+
+
+    private void scanEbook(String path) {
         String responseString = "";
         String url = "https://www.googleapis.com/books/v1/volumes?q=" + path.replace(" ", "%20").replace(".epub", "") + "&key=AIzaSyDNxF8IsW8_TzLK8Jt_98qgOiQW2KFQ6Hc";
         try {
