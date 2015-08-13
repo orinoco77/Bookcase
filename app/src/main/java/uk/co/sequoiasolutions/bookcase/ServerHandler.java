@@ -4,9 +4,6 @@ package uk.co.sequoiasolutions.bookcase;
  * Created by ajs on 07/08/2015.
  */
 
-import org.json.JSONException;
-import org.json.JSONObject;
-
 import java.io.File;
 import java.io.FileInputStream;
 import java.io.FileNotFoundException;
@@ -70,36 +67,32 @@ public class ServerHandler extends NanoHTTPD {
 
         } else {
             String[] params = querystring.split("&");
-            JSONObject json = null;
+
+            String jsonString = "";
             for (String param : params) {
                 String key = param.split("=")[0];
                 if (key.equals("getall")) {
                     EbookDataSource dataSource = new EbookDataSource(MainActivity.ma.getApplicationContext()); //ugly but possibly unavoidable
                     dataSource.open();
                     List<Ebook> ebooks = dataSource.getAllEbooks();
-                    try {
-                        json = new JSONObject().put("count", ebooks.size());
-                        json.put("ebook", null);
+                    jsonString += "{\n \"count\": " + ebooks.size() + ",";
+                    jsonString += "\n \"ebook\": [";
                         for (Ebook book : ebooks) {
-                            json.accumulate("ebook", new JSONObject()
-                                    .put("title", book.getTitle())
-                                    .put("author", book.getAuthor())
-                                    .put("description", book.getDescription())
-                                    .put("imageUrl", book.getImageUrl())
-                                    .put("ebookUrl", "http://" + ipAddress + ":" + Port + "/" + book.getEbookUrl()));
+                            jsonString += "\n {";
+                            jsonString += "\n \"title\": \"" + book.getTitle() + "\",";
+                            jsonString += "\n \"author\": \"" + book.getAuthor() + "\",";
+                            jsonString += "\n \"description\": \"" + book.getDescription().replace("\"", "\\\"") + "\",";
+                            jsonString += "\n \"imageUrl\": \"" + book.getImageUrl() + "\",";
+                            jsonString += "\n \"ebookUrl\": \"" + book.getEbookUrl() + "\"";
+                            jsonString += "\n },";
                         }
-                    } catch (JSONException e) {
-                        e.printStackTrace();
+                    jsonString = jsonString.substring(0, jsonString.length() - 1);
+                    jsonString += "\n ]";
+                    jsonString += "\n }";
+                    answer = jsonString;
                     }
-                    try {
-                        answer = json.toString(1).replace("\\", "");
-                    } catch (JSONException e) {
-                        answer = json.toString();
-                    }
-                }
             }
         }
-
         return newFixedLengthResponse(Response.Status.OK, "application/json", answer);
     }
 }
