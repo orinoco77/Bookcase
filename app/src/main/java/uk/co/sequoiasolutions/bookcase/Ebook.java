@@ -8,7 +8,7 @@ public class Ebook {
     private String _title;
     private String _author;
     private String _description;
-    private String _imageUrl;
+    private byte[] _imageUrl;
     private String _ebookUrl;
 
     public String getTitle() {
@@ -35,11 +35,11 @@ public class Ebook {
         this._description = description;
     }
 
-    public String getImageUrl() {
+    public byte[] getImageUrl() {
         return _imageUrl;
     }
 
-    public void setImageUrl(String imageUrl) {
+    public void setImageUrl(byte[] imageUrl) {
         this._imageUrl = imageUrl;
     }
 

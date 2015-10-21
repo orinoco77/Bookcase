@@ -39,7 +39,7 @@ public class EbookDataSource {
         return createEbook(ebook.getTitle(), ebook.getAuthor(), ebook.getDescription(), ebook.getImageUrl(), ebook.getEbookUrl());
     }
 
-    public Ebook createEbook(String title, String author, String description, String imageUrl, String ebookUrl) {
+    public Ebook createEbook(String title, String author, String description, byte[] imageUrl, String ebookUrl) {
         ContentValues values = new ContentValues();
         values.put(MySQLiteHelper.COLUMN_TITLE, title);
         values.put(MySQLiteHelper.COLUMN_AUTHOR, author);
@@ -81,6 +81,22 @@ public class EbookDataSource {
         return ebooks;
     }
 
+    public List<Ebook> getBatch(int start, int count) {
+        List<Ebook> ebooks = new ArrayList<Ebook>();
+        Cursor cursor = database.query(MySQLiteHelper.TABLE_EBOOKS,
+                allColumns, MySQLiteHelper.COLUMN_ID + ">" + start + " and " + MySQLiteHelper.COLUMN_ID + "<" + start + count, null, null, null, null);
+
+        cursor.moveToFirst();
+        while (!cursor.isAfterLast()) {
+            Ebook ebook = cursorToEbook(cursor);
+            ebooks.add(ebook);
+            cursor.moveToNext();
+        }
+        // make sure to close the cursor
+        cursor.close();
+        return ebooks;
+    }
+
     public boolean ebookExists(String ebookUrl) {
         Cursor cursor = database.query(MySQLiteHelper.TABLE_EBOOKS, new String[]{MySQLiteHelper.COLUMN_EBOOKURL}, MySQLiteHelper.COLUMN_EBOOKURL + "= ?", new String[]{ebookUrl}, null, null, null);
         cursor.moveToFirst();
@@ -90,9 +106,7 @@ public class EbookDataSource {
     }
 
     public Cursor getEbookCursor() {
-        Cursor cursor = database.query(MySQLiteHelper.TABLE_EBOOKS, new String[]{MySQLiteHelper.COLUMN_ID, MySQLiteHelper.COLUMN_TITLE, MySQLiteHelper.COLUMN_AUTHOR, MySQLiteHelper.COLUMN_IMAGEURL}, null, null, null, null, null);
-
-        return cursor;
+        return database.query(MySQLiteHelper.TABLE_EBOOKS, new String[]{MySQLiteHelper.COLUMN_ID, MySQLiteHelper.COLUMN_TITLE, MySQLiteHelper.COLUMN_AUTHOR, MySQLiteHelper.COLUMN_IMAGEURL}, null, null, null, null, null);
     }
 
     private Ebook cursorToEbook(Cursor cursor) {
@@ -101,7 +115,7 @@ public class EbookDataSource {
         ebook.setTitle(cursor.getString(1));
         ebook.setAuthor(cursor.getString(2));
         ebook.setDescription(cursor.getString(3));
-        ebook.setImageUrl(cursor.getString(4));
+        ebook.setImageUrl(cursor.getBlob(4));
         ebook.setEbookUrl(cursor.getString(5));
         return ebook;
     }

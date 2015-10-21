@@ -25,7 +25,7 @@ public class MySQLiteHelper extends SQLiteOpenHelper {
             + COLUMN_TITLE + " text not null, "
             + COLUMN_AUTHOR + " text not null, "
             + COLUMN_DESCRIPTION + " text not null, "
-            + COLUMN_IMAGEURL + " text not null, "
+            + COLUMN_IMAGEURL + " blob not null, "
             + COLUMN_EBOOKURL + " text not null"
             + ");";
 

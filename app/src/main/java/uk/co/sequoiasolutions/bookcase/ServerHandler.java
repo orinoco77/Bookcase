@@ -4,13 +4,12 @@ package uk.co.sequoiasolutions.bookcase;
  * Created by ajs on 07/08/2015.
  */
 
+import android.support.annotation.NonNull;
+import android.util.Base64;
+
 import java.io.File;
 import java.io.FileInputStream;
 import java.io.FileNotFoundException;
-import java.net.InetAddress;
-import java.net.NetworkInterface;
-import java.net.SocketException;
-import java.util.Enumeration;
 import java.util.List;
 
 import fi.iki.elonen.NanoHTTPD;
@@ -34,19 +33,7 @@ public class ServerHandler extends NanoHTTPD {
 
     @Override
     public Response serve(IHTTPSession session) {
-        String ipAddress = null;
-        try {
-            for (Enumeration<NetworkInterface> en = NetworkInterface.getNetworkInterfaces(); en.hasMoreElements(); ) {
-                NetworkInterface intf = en.nextElement();
-                for (Enumeration<InetAddress> enumIpAddr = intf.getInetAddresses(); enumIpAddr.hasMoreElements(); ) {
-                    InetAddress inetAddress = enumIpAddr.nextElement();
-                    if (!inetAddress.isLoopbackAddress()) {
-                        ipAddress = inetAddress.getHostAddress().toString();
-                    }
-                }
-            }
-        } catch (SocketException ex) {
-        }
+
         String querystring = session.getQueryParameterString();
         String answer = "";
         String filepath = Path
@@ -70,29 +57,48 @@ public class ServerHandler extends NanoHTTPD {
 
             String jsonString = "";
             for (String param : params) {
-                String key = param.split("=")[0];
+                String[] keyValue = param.split("=");
+                String key = keyValue[0];
+                String value = keyValue[1];
                 if (key.equals("getall")) {
                     EbookDataSource dataSource = new EbookDataSource(MainActivity.ma.getApplicationContext()); //ugly but possibly unavoidable
                     dataSource.open();
                     List<Ebook> ebooks = dataSource.getAllEbooks();
-                    jsonString += "{\n \"count\": " + ebooks.size() + ",";
-                    jsonString += "\n \"ebook\": [";
-                        for (Ebook book : ebooks) {
-                            jsonString += "\n {";
-                            jsonString += "\n \"title\": \"" + book.getTitle() + "\",";
-                            jsonString += "\n \"author\": \"" + book.getAuthor() + "\",";
-                            jsonString += "\n \"description\": \"" + book.getDescription().replace("\"", "\\\"") + "\",";
-                            jsonString += "\n \"imageUrl\": \"" + book.getImageUrl() + "\",";
-                            jsonString += "\n \"ebookUrl\": \"" + book.getEbookUrl() + "\"";
-                            jsonString += "\n },";
-                        }
-                    jsonString = jsonString.substring(0, jsonString.length() - 1);
-                    jsonString += "\n ]";
-                    jsonString += "\n }";
-                    answer = jsonString;
+                    answer = getJSONString(ebooks, ebooks.size());
                     }
+                if (key.equals("getbatch")) {
+                    EbookDataSource dataSource = new EbookDataSource(MainActivity.ma.getApplicationContext()); //ugly but possibly unavoidable
+                    dataSource.open();
+                    List<Ebook> ebooks = dataSource.getBatch(Integer.parseInt(value), 20);
+                    int max = dataSource.getAllEbooks().size();
+                    answer = getJSONString(ebooks, max);
+                }
+                if (key.equals("refresh")) {
+                    ScanService.startActionScanEbooks(MainActivity.ma.getApplicationContext(), Path, MainActivity.ma.mReceiver);
+                }
             }
         }
         return newFixedLengthResponse(Response.Status.OK, "application/json", answer);
+    }
+
+    @NonNull
+    private String getJSONString(List<Ebook> ebooks, int max) {
+        String jsonString = "";
+        jsonString += "{\n \"count\": " + ebooks.size() + ",";
+        jsonString += "\n \"max\": " + max + ",";
+        jsonString += "\n \"ebook\": [";
+        for (Ebook book : ebooks) {
+            jsonString += "\n {";
+            jsonString += "\n \"title\": \"" + book.getTitle().replace("\"", "\\\"") + "\",";
+            jsonString += "\n \"author\": \"" + book.getAuthor().replace("\"", "\\\"") + "\",";
+            jsonString += "\n \"description\": \"" + book.getDescription().replace("\"", "\\\"") + "\",";
+            jsonString += "\n \"imageUrl\": \"" + Base64.encodeToString(book.getImageUrl(), Base64.DEFAULT) + "\",";
+            jsonString += "\n \"ebookUrl\": \"" + book.getEbookUrl() + "\"";
+            jsonString += "\n },";
+        }
+        jsonString = jsonString.substring(0, jsonString.length() - 1);
+        jsonString += "\n ]";
+        jsonString += "\n }";
+        return jsonString;
     }
 }
