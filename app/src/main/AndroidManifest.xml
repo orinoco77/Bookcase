@@ -3,12 +3,13 @@
     package="uk.co.sequoiasolutions.bookcase">
 
     <uses-permission android:name="android.permission.INTERNET" />
-
+    <uses-permission android:name="android.permission.READ_EXTERNAL_STORAGE" />
     <application
         android:allowBackup="true"
         android:icon="@mipmap/ic_launcher"
         android:label="@string/app_name"
-        android:theme="@style/AppTheme">
+        android:theme="@style/AppTheme"
+        android:name=".Bookcase">
         <activity
             android:name=".MainActivity"
             android:label="@string/app_name">

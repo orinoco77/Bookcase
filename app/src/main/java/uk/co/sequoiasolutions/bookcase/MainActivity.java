@@ -8,6 +8,7 @@ import android.os.Bundle;
 import android.os.Handler;
 import android.preference.PreferenceManager;
 import android.support.v7.app.AppCompatActivity;
+import android.util.Base64;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.View.OnClickListener;
@@ -19,6 +20,9 @@ import android.widget.ListView;
 import android.widget.ProgressBar;
 import android.widget.TextView;
 import android.widget.Toast;
+
+import org.orman.mapper.Model;
+import org.orman.mapper.ModelQuery;
 
 import java.io.File;
 import java.io.IOException;
@@ -34,22 +38,30 @@ public class MainActivity extends AppCompatActivity implements ScanResultReceive
     private Button configureButton;
     private Button scanButton;
     private ListView listViewEbooks;
+    private TextView bookCount;
     private ProgressBar spinner;
     private boolean started = false;
+    private boolean scanning = false;
     private static String mLog;
     private ServerHandler handler;
     private String path;
     private String port;
     private SharedPreferences sharedPref;
     private EbookAdapter ebookAdapter;
+    private int currentIndex;
     public ScanResultReceiver mReceiver;
     public static final String STATE_START = "Started";
+    public static final String STATE_SCANNING = "Scanning";
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
-        if (savedInstanceState != null)
+        if (savedInstanceState != null) {
             started = savedInstanceState.getBoolean(STATE_START);
+            scanning = savedInstanceState.getBoolean(STATE_SCANNING);
+        }
+        currentIndex = 0;
+
         mReceiver = new ScanResultReceiver(new Handler());
         mReceiver.setReceiver(this);
         sharedPref = PreferenceManager.getDefaultSharedPreferences(this);
@@ -63,15 +75,30 @@ public class MainActivity extends AppCompatActivity implements ScanResultReceive
         scanButton = (Button) findViewById(R.id.buttonScan);
         scanButton.setOnClickListener(scanListener);
         listViewEbooks = (ListView) findViewById(R.id.listViewEbooks);
+        Button btnLoadMore = new Button(this);
+        btnLoadMore.setText("Load More");
+        btnLoadMore.setOnClickListener(new View.OnClickListener() {
+
+            @Override
+            public void onClick(View arg0) {
+                populateListView(currentIndex + 20);
+            }
+        });
+        // Adding Load More button to lisview at bottom
+
+        listViewEbooks.addFooterView(btnLoadMore);
+        bookCount = (TextView) findViewById(R.id.bookCount);
         ebookAdapter = new EbookAdapter(this);
         spinner = (ProgressBar) findViewById(R.id.progressBar);
-        spinner.setVisibility(View.GONE);
+        if (!scanning) {
+            spinner.setVisibility(View.INVISIBLE);
+        }
         if (started) {
             startButton.setText("Stop Server");
         } else {
             startButton.setText("Start Server");
         }
-        populateListView();
+        populateListView(0);
     }
 
 
@@ -122,26 +149,30 @@ public class MainActivity extends AppCompatActivity implements ScanResultReceive
     private OnClickListener scanListener = new OnClickListener() {
         public void onClick(View v) {
             spinner.setVisibility(View.VISIBLE);
+            scanning = true;
             ScanService.startActionScanEbooks(MainActivity.this, path, mReceiver);
         }
     };
 
-    private void populateListView() {
-        EbookDataSource dataSource = new EbookDataSource(MainActivity.this);
-        dataSource.open();
-        List<Ebook> ebooks = dataSource.getAllEbooks();
+    private void populateListView(final int start) {
+
+        List<Ebook> ebooks = Model.fetchQuery(ModelQuery.select().from(Ebook.class).limit(20, start).getQuery(), Ebook.class);
+        String ebookCount = (String) Model.fetchSingleValue(ModelQuery.select().from(Ebook.class).count().getQuery());
+        bookCount.setText(ebookCount + " ebooks found");
         Ebook[] ebookArray = new Ebook[ebooks.size()];
         ebooks.toArray(ebookArray);
         ebookAdapter.setEbookList(ebookArray);
         ListView listView = (ListView) findViewById(R.id.listViewEbooks);
+        currentIndex = start;
         listView.setAdapter(ebookAdapter);
     }
 
     @Override
     public void onReceiveResult(int resultCode, Bundle resultData) {
         if (resultCode == 0) {
-            spinner.setVisibility(View.GONE);
-            populateListView();
+            spinner.setVisibility(View.INVISIBLE);
+            scanning = false;
+            populateListView(0);
         }
         if (resultCode == 1) {
             Toast.makeText(MainActivity.this, resultData.getString("errorMessage"), Toast.LENGTH_LONG).show();
@@ -152,6 +183,7 @@ public class MainActivity extends AppCompatActivity implements ScanResultReceive
     @Override
     public void onSaveInstanceState(Bundle savedInstanceState) {
         savedInstanceState.putBoolean(STATE_START, started);
+        savedInstanceState.putBoolean(STATE_SCANNING, scanning);
 
         // Always call the superclass so it can save the view hierarchy state
         super.onSaveInstanceState(savedInstanceState);
@@ -228,11 +260,20 @@ public class MainActivity extends AppCompatActivity implements ScanResultReceive
             }
 
 
-            holder.title.setText(ebooks[position].getTitle());
-            holder.author.setText(ebooks[position].getAuthor());
-            holder.filename.setText(ebooks[position].getEbookUrl());
-            byte[] bytes = ebooks[position].getImageUrl();
-            holder.image.setImageBitmap(BitmapFactory.decodeByteArray(bytes, 0, bytes.length));
+            holder.title.setText(ebooks[position].Title);
+            String authors = "";
+            for (Author author : ebooks[position].Authors) {
+                if (!authors.equals("")) {
+                    authors += "; ";
+                }
+                authors += author.Name;
+            }
+            holder.author.setText(authors);
+            holder.filename.setText(ebooks[position].EbookUrl);
+            if (ebooks[position].ImageUrl != null) {
+                byte[] bytes = Base64.decode(ebooks[position].ImageUrl, Base64.DEFAULT);
+                holder.image.setImageBitmap(BitmapFactory.decodeByteArray(bytes, 0, bytes.length));
+            }
             return convertView;
         }
     }

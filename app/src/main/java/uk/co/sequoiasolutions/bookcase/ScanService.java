@@ -7,9 +7,15 @@ import android.content.SharedPreferences;
 import android.os.Bundle;
 import android.os.ResultReceiver;
 import android.preference.PreferenceManager;
+import android.util.Base64;
+
+import org.orman.mapper.C;
+import org.orman.mapper.Model;
+import org.orman.mapper.ModelQuery;
 
 import java.io.File;
 import java.io.FileInputStream;
+import java.io.FilenameFilter;
 import java.io.IOException;
 
 import nl.siegmann.epublib.domain.Book;
@@ -75,12 +81,20 @@ public class ScanService extends IntentService {
 
     private void getBooksFromPath(String path) {
         File f = new File(path);
-        File files[] = f.listFiles();
+
+        File files[] = f.listFiles(new FilenameFilter() {
+            @Override
+            public boolean accept(File dir, String filename) {
+                return filename.toLowerCase().endsWith(".epub") || new File(dir.getAbsolutePath() + "/" + filename).isDirectory();
+            }
+        });
         if (files != null) {
             for (File file : files) {
-                if (file.isDirectory())
+                if (file.isDirectory()) {
                     getBooksFromPath(file.getAbsolutePath());
-                if (file.getName().endsWith(".epub"))
+                    continue;
+                }
+
                     try {
                         scanEbook(file.getAbsolutePath());
                     } catch (IOException e) {
@@ -99,32 +113,45 @@ public class ScanService extends IntentService {
 
     private void scanEbook(String path) throws IOException {
 
-        EbookDataSource dataSource = new EbookDataSource(this);
-        dataSource.open();
-        // Load Book from inputStream
-
         Book book = (new EpubReader()).readEpub(new FileInputStream(path));
 
         Ebook ebook = new Ebook();
-        String authors = "";
-        for (int i = 0; i < book.getMetadata().getAuthors().size(); i++) {
-            authors += book.getMetadata().getAuthors().get(i) + "; ";
-        }
-        authors = authors.substring(0, authors.length() - 2);
-        ebook.setAuthor(authors);
-        ebook.setTitle(book.getTitle());
-        if (!book.getMetadata().getDescriptions().isEmpty()) {
-            ebook.setDescription(book.getMetadata().getDescriptions().get(0));
-        } else {
-            ebook.setDescription("");
-        }
-        ebook.setEbookUrl(new File(path).getName());
-        ebook.setImageUrl(book.getCoverImage().getData());
-            if (!dataSource.ebookExists(ebook.getEbookUrl())) {
-                dataSource.createEbook(ebook);
-            }
 
-        dataSource.close();
+        ebook.Title = book.getTitle();
+        String description = "";
+        for (int i = 0; i < book.getMetadata().getDescriptions().size(); i++) {
+
+            description += book.getMetadata().getDescriptions().get(i) + "\n";
+        }
+        ebook.Description = description;
+        ebook.EbookUrl = new File(path).getAbsolutePath();
+        if (book.getCoverImage() != null)
+            ebook.ImageUrl = Base64.encodeToString(book.getCoverImage().getData(), Base64.DEFAULT);
+        String ebookMatchCount = (String) Model.fetchSingleValue(ModelQuery.select().from(Ebook.class).where(C.eq(Ebook.class, "EbookUrl", ebook.EbookUrl)).count().getQuery());
+        if (Integer.parseInt(ebookMatchCount) == 0) {
+            ebook.insert();
+            for (int i = 0; i < book.getMetadata().getAuthors().size(); i++) {
+
+                Author author = new Author();
+                author.Name = book.getMetadata().getAuthors().get(i).getFirstname() + " " + book.getMetadata().getAuthors().get(i).getLastname();
+                Author matchAuthor = Model.fetchSingle(ModelQuery.select().from(Author.class).where(C.eq(Author.class, "Name", author.Name)).getQuery(), Author.class);
+                if (matchAuthor == null) {
+                    author.insert();
+                    if (!author.Ebooks.contains(ebook))
+                        author.Ebooks.add(ebook);
+                    if (!ebook.Authors.contains(author))
+                        ebook.Authors.add(author);
+                } else {
+                    if (!matchAuthor.Ebooks.contains(ebook)) {
+                        matchAuthor.Ebooks.add(ebook);
+                    }
+                    if (!ebook.Authors.contains(matchAuthor)) {
+                        ebook.Authors.add(matchAuthor);
+                    }
+                }
+            }
+        }
+
     }
 
 }
