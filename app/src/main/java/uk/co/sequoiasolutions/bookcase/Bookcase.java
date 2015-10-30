@@ -7,7 +7,7 @@ import org.orman.dbms.sqliteandroid.SQLiteAndroid;
 import org.orman.mapper.MappingSession;
 
 /**
- * Created by ajs on 23/10/2015.
+ * Application initialisation
  */
 public class Bookcase extends Application {
     @Override
@@ -18,7 +18,7 @@ public class Bookcase extends Application {
         //MappingSession.registerPackage("uk.co.sequoiasolutions.bookcase");
         MappingSession.registerEntity(Ebook.class);
         MappingSession.registerEntity(Author.class);
-
+        MappingSession.registerEntity(ImageData.class);
         MappingSession.start();
     }
 }

@@ -59,7 +59,6 @@ public class ScanService extends IntentService {
             rec = intent.getParcelableExtra("receiverTag");
             final String action = intent.getAction();
             if (ACTION_SCAN_EBOOKS.equals(action)) {
-                final String path = intent.getStringExtra(PATH);
                 handleActionScanEbooks();
                 Bundle b = new Bundle();
                 rec.send(0, b);
@@ -125,8 +124,12 @@ public class ScanService extends IntentService {
         }
         ebook.Description = description;
         ebook.EbookUrl = new File(path).getAbsolutePath();
-        if (book.getCoverImage() != null)
-            ebook.ImageUrl = Base64.encodeToString(book.getCoverImage().getData(), Base64.DEFAULT);
+        if (book.getCoverImage() != null) {
+            ImageData imageData = new ImageData();
+            imageData.Base64CoverImage = Base64.encodeToString(book.getCoverImage().getData(), Base64.DEFAULT);
+            imageData.insert();
+            ebook.ImageId = imageData.Id;
+        }
         String ebookMatchCount = (String) Model.fetchSingleValue(ModelQuery.select().from(Ebook.class).where(C.eq(Ebook.class, "EbookUrl", ebook.EbookUrl)).count().getQuery());
         if (Integer.parseInt(ebookMatchCount) == 0) {
             ebook.insert();

@@ -5,11 +5,13 @@ import android.os.Handler;
 import android.os.ResultReceiver;
 
 /**
- * Created by ajs on 11/08/2015.
+ * Receives the result of the ebook scan
  */
 public class ScanResultReceiver extends ResultReceiver {
 
     private Receiver mReceiver;
+
+    private Creator CREATOR;
 
     public ScanResultReceiver(Handler handler) {
         super(handler);

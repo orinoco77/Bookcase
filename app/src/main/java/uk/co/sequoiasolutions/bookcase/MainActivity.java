@@ -21,6 +21,7 @@ import android.widget.ProgressBar;
 import android.widget.TextView;
 import android.widget.Toast;
 
+import org.orman.mapper.C;
 import org.orman.mapper.Model;
 import org.orman.mapper.ModelQuery;
 
@@ -270,10 +271,12 @@ public class MainActivity extends AppCompatActivity implements ScanResultReceive
             }
             holder.author.setText(authors);
             holder.filename.setText(ebooks[position].EbookUrl);
-            if (ebooks[position].ImageUrl != null) {
-                byte[] bytes = Base64.decode(ebooks[position].ImageUrl, Base64.DEFAULT);
+            ImageData imageData = Model.fetchSingle(ModelQuery.select().from(ImageData.class).where(C.eq("Id", ebooks[position].ImageId)).getQuery(), ImageData.class);
+            if (imageData != null) {
+                byte[] bytes = Base64.decode(imageData.Base64CoverImage, Base64.DEFAULT);
                 holder.image.setImageBitmap(BitmapFactory.decodeByteArray(bytes, 0, bytes.length));
             }
+
             return convertView;
         }
     }
