@@ -65,7 +65,7 @@ public class ServerHandler extends NanoHTTPD {
                 String key = keyValue[0];
                 String value = keyValue[1];
                 if (key.equals("getauthors")) {
-                    List<Author> authors = Model.fetchQuery(ModelQuery.select().from(Author.class).where(C.like(Author.class, "name", "% " + value + "%")).getQuery(), Author.class);
+                    List<Author> authors = Model.fetchQuery(ModelQuery.select().from(Author.class).where(C.like(Author.class, "surname", value + "%")).getQuery(), Author.class);
                     Gson gson = new Gson();
                     List<AuthorJson> jsonAuthors = new ArrayList<>();
                     for (Author author : authors) {
@@ -85,7 +85,7 @@ public class ServerHandler extends NanoHTTPD {
                     //answer = getAuthorEbooksJSON(author.Ebooks);
                 }
                 if (key.equals("getsearch")) {
-                    List<Author> authors = Model.fetchQuery(ModelQuery.select().from(Author.class).where(C.like("name", "%" + value + "%")).getQuery(), Author.class);
+                    List<Author> authors = Model.fetchQuery(ModelQuery.select().from(Author.class).where(C.like("forename || ' ' || surname", "%" + value + "%")).getQuery(), Author.class);
                     List<Ebook> ebooks = new ArrayList<>();
                     for (Author author : authors) {
                         ebooks.addAll(author.Ebooks);

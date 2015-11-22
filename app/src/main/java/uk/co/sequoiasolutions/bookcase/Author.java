@@ -13,7 +13,8 @@ import org.orman.mapper.annotation.PrimaryKey;
 class Author extends Model<Author> {
     @PrimaryKey(autoIncrement = true)
     public long Id;
-    public String Name;
+    public String Forename;
+    public String Surname;
     @ManyToMany(toType = Ebook.class)
     public EntityList<Author, Ebook> Ebooks = new EntityList<Author, Ebook>(Author.class, Ebook.class, this);
 

@@ -17,6 +17,7 @@ import java.io.File;
 import java.io.FileInputStream;
 import java.io.FilenameFilter;
 import java.io.IOException;
+import java.util.List;
 
 import nl.siegmann.epublib.domain.Book;
 import nl.siegmann.epublib.epub.EpubReader;
@@ -34,6 +35,7 @@ public class ScanService extends IntentService {
     private static final String PATH = "uk.co.sequoiasolutions.bookcase.extra.Path";
     private ResultReceiver rec;
     private SharedPreferences sharedPref;
+    private long lastscan=0;
     /**
      * Starts this service to perform action ScanEbooks with the given parameters. If
      * the service is already performing a task this action will be queued.
@@ -72,10 +74,10 @@ public class ScanService extends IntentService {
      */
     private void handleActionScanEbooks() {
         sharedPref = PreferenceManager.getDefaultSharedPreferences(this);
-        String path = sharedPref.getString("path", "");
-        if (path.equals(""))
-            path = "/sdcard/";
+        String path = sharedPref.getString("path", "/sdcard");
+        lastscan = sharedPref.getLong("lastscan", 0);
         getBooksFromPath(path);
+        sharedPref.edit().putLong("lastscan", System.currentTimeMillis());
     }
 
     private void getBooksFromPath(String path) {
@@ -84,7 +86,7 @@ public class ScanService extends IntentService {
         File files[] = f.listFiles(new FilenameFilter() {
             @Override
             public boolean accept(File dir, String filename) {
-                return filename.toLowerCase().endsWith(".epub") || new File(dir.getAbsolutePath() + "/" + filename).isDirectory();
+                return (filename.toLowerCase().endsWith(".epub") && new File(dir.getAbsolutePath() + "/" + filename).lastModified() > lastscan) || new File(dir.getAbsolutePath() + "/" + filename).isDirectory();
             }
         });
         if (files != null) {
@@ -135,21 +137,22 @@ public class ScanService extends IntentService {
             ebook.insert();
             for (int i = 0; i < book.getMetadata().getAuthors().size(); i++) {
 
-                Author author = new Author();
-                author.Name = book.getMetadata().getAuthors().get(i).getFirstname() + " " + book.getMetadata().getAuthors().get(i).getLastname();
-                Author matchAuthor = Model.fetchSingle(ModelQuery.select().from(Author.class).where(C.eq(Author.class, "Name", author.Name)).getQuery(), Author.class);
-                if (matchAuthor == null) {
-                    author.insert();
-                    if (!author.Ebooks.contains(ebook))
-                        author.Ebooks.add(ebook);
-                    if (!ebook.Authors.contains(author))
-                        ebook.Authors.add(author);
-                } else {
-                    if (!matchAuthor.Ebooks.contains(ebook)) {
-                        matchAuthor.Ebooks.add(ebook);
-                    }
-                    if (!ebook.Authors.contains(matchAuthor)) {
-                        ebook.Authors.add(matchAuthor);
+                List<Author> authors = NameParser.Parse(book.getMetadata().getAuthors().get(i).getFirstname() + " " + book.getMetadata().getAuthors().get(i).getLastname());
+                for (Author author : authors) {
+                    Author matchAuthor = Model.fetchSingle(ModelQuery.select().from(Author.class).where(C.and(C.eq(Author.class, "Forename", author.Forename), C.eq(Author.class, "Surname", author.Surname))).getQuery(), Author.class);
+                    if (matchAuthor == null) {
+                        author.insert();
+                        if (!author.Ebooks.contains(ebook))
+                            author.Ebooks.add(ebook);
+                        if (!ebook.Authors.contains(author))
+                            ebook.Authors.add(author);
+                    } else {
+                        if (!matchAuthor.Ebooks.contains(ebook)) {
+                            matchAuthor.Ebooks.add(ebook);
+                        }
+                        if (!ebook.Authors.contains(matchAuthor)) {
+                            ebook.Authors.add(matchAuthor);
+                        }
                     }
                 }
             }

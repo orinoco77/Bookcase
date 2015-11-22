@@ -267,7 +267,7 @@ public class MainActivity extends AppCompatActivity implements ScanResultReceive
                 if (!authors.equals("")) {
                     authors += "; ";
                 }
-                authors += author.Name;
+                authors += author.Forename + " " + author.Surname;
             }
             holder.author.setText(authors);
             holder.filename.setText(ebooks[position].EbookUrl);

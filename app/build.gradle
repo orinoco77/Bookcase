@@ -26,5 +26,6 @@ dependencies {
     compile 'org.slf4j:slf4j-android:1.7.7'
     compile 'com.google.code.gson:gson:2.4'
     compile 'com.squareup.picasso:picasso:2.5.2'
+    compile 'org.apache.commons:commons-lang3:3.0'
     compile files('libs/orman-20120316.jar')
 }
