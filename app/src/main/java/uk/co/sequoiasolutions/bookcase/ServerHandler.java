@@ -65,7 +65,7 @@ public class ServerHandler extends NanoHTTPD {
                 String key = keyValue[0];
                 String value = keyValue[1];
                 if (key.equals("getauthors")) {
-                    List<Author> authors = Model.fetchQuery(ModelQuery.select().from(Author.class).where(C.like(Author.class, "surname", value + "%")).getQuery(), Author.class);
+                    List<Author> authors = Model.fetchQuery(ModelQuery.select().from(Author.class).where(C.like(Author.class, "surname", value + "%")).orderBy("Author.surname").getQuery(), Author.class);
                     Gson gson = new Gson();
                     List<AuthorJson> jsonAuthors = new ArrayList<>();
                     for (Author author : authors) {
