@@ -5,6 +5,7 @@ import android.content.Intent;
 import android.content.SharedPreferences;
 import android.graphics.BitmapFactory;
 import android.os.Bundle;
+import android.os.Environment;
 import android.os.Handler;
 import android.preference.PreferenceManager;
 import android.support.v7.app.AppCompatActivity;
@@ -116,7 +117,7 @@ public class MainActivity extends AppCompatActivity implements ScanResultReceive
                     port = "8080";
                 path = sharedPref.getString("path", "");
                 if (path.equals(""))
-                    path = "/sdcard/";
+                    path = Environment.getExternalStorageDirectory().getPath();
                 File testPath = new File(path);
                 if (testPath.exists()) {
                     handler = new ServerHandler(Integer.parseInt(port), path);

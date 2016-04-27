@@ -42,13 +42,9 @@ public class NameParser {
             }
             Author author = new Author();
             String forenameArr[] = new String[surnameStart];
-            for (int i = 0; i < surnameStart; i++) {
-                forenameArr[i] = singleNameArr[i];
-            }
+            System.arraycopy(singleNameArr, 0, forenameArr, 0, surnameStart);
             String surnameArr[] = new String[singleNameArr.length - surnameStart];
-            for (int i = 0; i < singleNameArr.length - surnameStart; i++) {
-                surnameArr[i] = singleNameArr[i + surnameStart];
-            }
+            System.arraycopy(singleNameArr, 0 + surnameStart, surnameArr, 0, singleNameArr.length - surnameStart);
 
             author.Forename = StringUtils.join(forenameArr, " ");
             author.Surname = StringUtils.join(surnameArr, " ");

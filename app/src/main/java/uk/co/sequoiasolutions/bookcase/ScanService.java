@@ -5,6 +5,7 @@ import android.content.Context;
 import android.content.Intent;
 import android.content.SharedPreferences;
 import android.os.Bundle;
+import android.os.Environment;
 import android.os.ResultReceiver;
 import android.preference.PreferenceManager;
 import android.util.Base64;
@@ -74,7 +75,7 @@ public class ScanService extends IntentService {
      */
     private void handleActionScanEbooks() {
         sharedPref = PreferenceManager.getDefaultSharedPreferences(this);
-        String path = sharedPref.getString("path", "/sdcard");
+        String path = sharedPref.getString("path", Environment.getExternalStorageDirectory().getPath());
         lastscan = sharedPref.getLong("lastscan", 0);
         getBooksFromPath(path);
         sharedPref.edit().putLong("lastscan", System.currentTimeMillis());
